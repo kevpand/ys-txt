@@ -1,4 +1,4 @@
-(ns main
+(ns ys-txt.main
   (:require [clojure.java.io :as io]
             [tick.core :as t]
             [twttr.api]
@@ -23,7 +23,14 @@
 (defn- make-lyrics []
   (shuffle (sequence extract-lyrics lyric-files)))
 
-(def ^:private initial-hours [9 12 15 18 21])
+(def ^:private initial-hours
+  "UTC hours we'd like to send a status in, targetting throughout the
+  day in Chicago timezone"
+  [14 17 20 23 2])
+
+(defn- post-tweet [tweet]
+  (twttr.api/statuses-update twitter-creds
+                             :params {:status tweet}))
 
 (defn main []
   (loop [hours initial-hours
@@ -45,8 +52,7 @@
         :else (if (and (= now-minute minute)
                        (= now-hour hour))
                 (let [tweet (first curr-lyrics)]
-                  (twttr.api/statuses-update twitter-creds
-                                             :params {:status tweet})
+                  (post-tweet tweet)
                   (recur (rest hours)
                          (rand-int 60)
                          (rest curr-lyrics)))
